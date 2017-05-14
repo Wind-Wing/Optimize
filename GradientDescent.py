@@ -21,27 +21,24 @@ def GetValue(f,args,point):
     else:
         return np.array([f.evalf(subs=GetSubs(args, point))]).astype('float')
 
-def GetStep(f,args,a,b,direction,point,former):
+def GetStep(f,
+            args,a,b,
+            direction,point,
+            former,df):
     # Init
     t = 1
+    dfValue = GetValue(df, args, point)
     # Calc x = x+td
     d = GetValue(direction,args,point)
     x = point + t*d
     # Traceback searching
-    while np.linalg.norm(GetValue(f,args,x)) > (1-a)*former :
+    while GetValue(f,args,x) > former + t*a*np.dot(dfValue,d) :
         # That means can not find next step
         # if a and e is not reasonable, this method may can not find next step
         if t == 0:break
         t = b * t
         # Calc x = point +td
         x = point + t*d
-    '''
-    x = point
-    while np.linalg.norm(GetValue(f,args,x)) > (1-a)*former:
-        t =  t/b
-        # Calc x = point +td
-        x = point + t * d
-    '''
     return t
 
 def Search(f, args, a, b, initPoint, e):
@@ -63,7 +60,7 @@ def Search(f, args, a, b, initPoint, e):
         directionValue = GetValue(direction, args, x)
         # Check
         if np.linalg.norm(dfValue, 2) < e: break
-        t = GetStep(f,args,a,b,direction,x,fStack[-1:][0])
+        t = GetStep(f,args,a,b,direction,x,fStack[-1:][0],df)
         # That means can not find next step due to the limit of a
         if t == 0:
             print("t == 0 ")
@@ -95,7 +92,7 @@ if __name__ == "__main__":
     # Error range
     e = 0.001
     # α&β for back tracking
-    a = 0.00000001
+    a = 0.01
     b = 0.1
     # Start
     fStack = Search(f,args,a,b,x0,e)
